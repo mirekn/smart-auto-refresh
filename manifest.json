@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Auto Refresh",
+  "version": "1.3.6",
+  "description": "Smart automatic tab refresher with active-tab pausing, hard reload, and configurable per-URL rules.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "smart-auto-refresh@mirekn.dev",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Smart Auto Refresh"
+  },
+  "background": {
+    "scripts": [
+      "background/background.js"
+    ]
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  }
+}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Auto Refresh - Rule Manager & Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="brand">
+        <img src="../icons/icon-48.png" alt="Smart Auto Refresh Logo" class="brand-logo">
+        <div>
+          <h1 class="brand-title">Smart Auto Refresh</h1>
+          <p class="brand-subtitle">Manage URL auto-refresh rules, schedules, and configuration presets</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <input type="file" id="file-import" accept=".json" style="display: none;">
+        <button type="button" id="btn-import-json" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Import JSON
+        </button>
+        <button type="button" id="btn-export-json" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Export JSON
+        </button>
+        <button type="button" id="btn-add-rule" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add New Rule
+        </button>
+      </div>
+    </header>
+
+    <!-- Toolbar: Search and Filter -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search URL patterns or domains..." class="input-search">
+      </div>
+      <div class="filter-group">
+        <label for="filter-status">Filter:</label>
+        <select id="filter-status" class="select-filter">
+          <option value="all">All Rules</option>
+          <option value="enabled">Enabled Only</option>
+          <option value="disabled">Disabled Only</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Rules Table -->
+    <div class="rules-card">
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th style="width: 45px;">Status</th>
+            <th>URL / Pattern</th>
+            <th style="width: 110px;">Match Scope</th>
+            <th style="width: 100px;">Interval</th>
+            <th style="width: 110px;">Stop Active</th>
+            <th style="width: 110px;">Bypass Cache</th>
+            <th style="width: 90px; text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rules-tbody">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state hidden">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <h3>No rules configured yet</h3>
+        <p>Add a new URL rule above or configure auto-refresh from the toolbar popup on any website.</p>
+      </div>
+    </div>
+
+    <!-- Instructions / Tips Footer -->
+    <footer class="page-footer">
+      <div class="tip-card">
+        <h3>💡 How Matching Options Work</h3>
+        <ul>
+          <li><strong>Exact Match:</strong> Applies only to the exact URL specified.</li>
+          <li><strong>Domain Match:</strong> Applies to all pages under that domain (e.g. <code>example.com</code> or <code>*.example.com</code>).</li>
+          <li><strong>Prefix Match:</strong> Applies to all URLs starting with the prefix (e.g. <code>https://example.com/status</code>).</li>
+          <li><strong>Wildcard Match:</strong> Supports <code>*</code> (matches any characters) and <code>?</code> (matches single character), e.g. <code>*example.com/*/dashboard?*</code>.</li>
+          <li><strong>Regular Expression:</strong> Full JavaScript RegExp, e.g. <code>^https?:\/\/(www\.)?example\.com\/(live|status)$</code>.</li>
+          <li><strong>Navigation Safety:</strong> Timers automatically disarm the moment you navigate away to an unconfigured URL.</li>
+        </ul>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Add / Edit Rule Modal -->
+  <div id="rule-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Add URL Refresh Rule</h2>
+        <button type="button" id="btn-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <form id="rule-form">
+        <input type="hidden" id="modal-rule-id">
+
+        <div class="form-group">
+          <label for="modal-pattern" class="form-label">URL Pattern / Expression</label>
+          <input type="text" id="modal-pattern" class="form-input" placeholder="e.g. https://example.com/live or *domain.com/*" required>
+          <div id="modal-regex-error" class="modal-error-hint hidden">Invalid Regular Expression</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="modal-match-type" class="form-label">Match Scope</label>
+            <select id="modal-match-type" class="form-select">
+              <option value="exact">Exact URL</option>
+              <option value="domain">Entire Domain</option>
+              <option value="prefix">Prefix (Starts with)</option>
+              <option value="wildcard">Wildcard (* and ?)</option>
+              <option value="regex">Regular Expression (RegExp)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="modal-interval-val" class="form-label">Refresh Interval</label>
+            <div class="interval-input-group">
+              <input type="number" id="modal-interval-val" min="1" max="9999" value="15" class="form-input" required>
+              <select id="modal-interval-unit" class="form-select">
+                <option value="1">Seconds</option>
+                <option value="60">Minutes</option>
+                <option value="3600">Hours</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-checkboxes">
+          <label class="modal-checkbox-label">
+            <input type="checkbox" id="modal-pause-active" checked>
+            <span>Stop / pause countdown while tab is active</span>
+          </label>
+          <label class="modal-checkbox-label">
+            <input type="checkbox" id="modal-bypass-cache">
+            <span>Bypass browser cache (hard reload)</span>
+          </label>
+          <label class="modal-checkbox-label">
+            <input type="checkbox" id="modal-auto-start" checked>
+            <span>Auto-start countdown automatically when page opens</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="btn-modal-cancel" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="btn-modal-submit" class="btn btn-primary">Save Rule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
